@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+set -eo pipefail
+
+build=$1
+bin=$(cd "$(dirname "$0")"; pwd) # absolute path
+root=$(dirname "$bin")
+vendor=$build/vendor
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+mkdir -p $vendor $build/.profile.d
+
+echo 'Installing vips in ~/vendor' | indent
+
+tar xzf $root/dist/$STACK.tar.gz -C $vendor
+
+version=$(LD_LIBRARY_PATH=$vendor/vips/lib $vendor/vips/bin/vips --version 2>&1 | sed 's/vips-//')
+echo "Installed vips $version." | indent
+
+echo 'Setting up environment' | indent
+
+# The $HOME variable shall NOT expand here:
+vips='$HOME/vendor/vips'
+
+cat <<EOF > $build/.profile.d/vips.sh
+if [ "x\$LD_LIBRARY_PATH" == "x" ]; then
+  export LD_LIBRARY_PATH="$vips/lib"
+else
+  export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:$vips/lib"
+fi
+
+export PATH="\$PATH:$vips/bin"
+EOF

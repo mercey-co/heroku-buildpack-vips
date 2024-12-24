@@ -1,0 +1,11 @@
+#! /bin/bash
+
+bin=$(cd "$(dirname "$0")"; pwd) # absolute path
+root=$(dirname "$bin")
+
+if [[ -f $root/dist/$STACK.tar.gz ]]; then
+  echo vips
+  exit 0
+else
+  exit 1
+fi
